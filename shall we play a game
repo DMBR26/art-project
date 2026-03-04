@@ -1,0 +1,176 @@
+#Add Variables for game functions
+#set up the screen and background
+#add the snake head as a turtle
+#insert the apple also as a turtle
+#create scoreboard
+#define update scoreboard 
+# turtle border
+#create the border 
+
+import turtle
+import random
+import time
+
+# Variables
+score = 0
+high_score = 0
+snake_body = []
+
+# Setup
+screen = turtle.Screen()
+screen.title("Snake Game: PLTW 1.2.5 Edition")
+screen.bgcolor("light green")
+screen.setup(width=600, height=600)
+screen.tracer(0)
+
+# Snake head
+head = turtle.Turtle("square")
+head.color("blue")
+head.penup()
+head.direction = "stop"
+
+# Apple
+try:
+    screen.addshape("apple.gif")
+    apple = turtle.Turtle("apple.gif")
+except:
+    apple = turtle.Turtle("circle")
+    apple.color("red")
+
+apple.penup()
+apple.goto(0, 100)
+
+# Scoreboard
+pen = turtle.Turtle()
+pen.speed(0)
+pen.color("white")
+pen.penup()
+pen.hideturtle()
+pen.goto(0, 260)
+
+def update_scoreboard():
+    pen.clear()
+    text = "Score: {}  High Score: {}".format(score, high_score)
+    pen.write(text, align="center", font=("Courier", 24, "normal"))
+
+update_scoreboard()
+
+# ---- DRAW BORDER ----
+border = turtle.Turtle()
+border.hideturtle()
+border.speed(0)
+border.color("dark green")
+border.pensize(5)
+border.penup()
+
+# Start top-left corner (under score)
+border.goto(-290, 230)
+border.pendown()
+
+for _ in range(2):
+    border.forward(580)
+    border.right(90)
+    border.forward(500)
+    border.right(90)
+
+# Movement functions
+def go_up():
+    if head.direction != "down":
+        head.direction = "up"
+
+def go_down():
+    if head.direction != "up":
+        head.direction = "down"
+
+def go_left():
+    if head.direction != "right":
+        head.direction = "left"
+
+def go_right():
+    if head.direction != "left":
+        head.direction = "right"
+
+def move():
+    if head.direction == "up":
+        head.sety(head.ycor() + 20)
+    if head.direction == "down":
+        head.sety(head.ycor() - 20)
+    if head.direction == "left":
+        head.setx(head.xcor() - 20)
+    if head.direction == "right":
+        head.setx(head.xcor() + 20)
+
+def reset_game():
+    global score
+    time.sleep(1)
+    head.goto(0, 0)
+    head.direction = "stop"
+
+    for piece in snake_body:
+        piece.goto(1000, 1000)
+
+    snake_body.clear()
+    score = 0
+    update_scoreboard()
+
+# Controls
+screen.listen()
+screen.onkeypress(go_up, "w")
+screen.onkeypress(go_down, "s")
+screen.onkeypress(go_left, "a")
+screen.onkeypress(go_right, "d")
+
+# Main Game Loop
+while True:
+    screen.update()
+
+    # ---- BORDER COLLISION (NEW) ----
+    if (
+        head.xcor() > 285 or
+        head.xcor() < -285 or
+        head.ycor() > 225 or
+        head.ycor() < -265
+    ):
+        reset_game()
+
+    # Eating apple
+    if head.distance(apple) < 20:
+        apple.goto(random.randint(-260, 260), random.randint(-240, 200))
+
+        new_piece = turtle.Turtle("square")
+        new_piece.color("blue")
+        new_piece.penup()
+        snake_body.append(new_piece)
+
+        score += 10
+        if score > high_score:
+            high_score = score
+
+        update_scoreboard()
+
+    # ---- CLEAN BODY MOVEMENT ----
+
+    old_positions = []
+    for piece in snake_body:
+        old_positions.append((piece.xcor(), piece.ycor()))
+
+    if len(snake_body) > 0:
+        snake_body[0].goto(head.xcor(), head.ycor())
+
+    count = 1
+    for piece in snake_body[1:]:
+        x, y = old_positions[count - 1]
+        piece.goto(x, y)
+        count += 1
+
+    move()
+
+    # Self collision
+    for piece in snake_body[1:]:
+        if piece.distance(head) < 20:
+            reset_game()
+            break
+
+    time.sleep(0.1)
+
+# Code Ends 
